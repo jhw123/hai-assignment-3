@@ -1,0 +1,20 @@
+{
+  "name": "math-mcq-labeler",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "test-xml": "node scripts/test-xml.js"
+  },
+  "dependencies": {
+    "next": "13.4.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "papaparse": "5.3.2",
+    "googleapis": "121.0.0",
+    "katex": "0.16.8",
+    "sanitize-html": "2.11.0"
+  }
+}
