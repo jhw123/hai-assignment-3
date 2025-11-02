@@ -92,11 +92,13 @@ function renderMathToHTMLClient(text) {
 }
 
 export default function AiPage() {
+  const SESSION_LIMIT = 10
   const [total, setTotal] = useState(0)
   const [current, setCurrent] = useState(0)
   const [question, setQuestion] = useState(null)
   const [selected, setSelected] = useState(null)
   const [workerId, setWorkerId] = useState('')
+  const [solvedCount, setSolvedCount] = useState(0)
 
   useEffect(() => {
     // Get count and next unanswered index
@@ -111,6 +113,17 @@ export default function AiPage() {
       const params = new URLSearchParams(window.location.search)
       const wid = params.get('workerId') || params.get('workerid') || params.get('worker')
       if (wid) setWorkerId(wid)
+    }
+    // redirect to completion if already solved 10 or more
+    if (typeof window !== 'undefined') {
+      try {
+        const solved = JSON.parse(localStorage.getItem('solvedIds') || '[]')
+        const count = Array.isArray(solved) ? solved.length : 0
+        setSolvedCount(count)
+        if (count >= SESSION_LIMIT) {
+          window.location.href = '/done'
+        }
+      } catch (e) {}
     }
   }, [])
 
@@ -136,6 +149,22 @@ export default function AiPage() {
   payload.sheetName = 'ai'
   const res = await fetch('/api/submit', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
     if (res.ok) {
+      // update local solvedIds (avoid double-counting same question)
+      try {
+        const key = 'solvedIds'
+        const raw = localStorage.getItem(key) || '[]'
+        const arr = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : []
+        if (!arr.includes(question.id)) {
+          arr.push(question.id)
+          localStorage.setItem(key, JSON.stringify(arr))
+        }
+        const count = arr.length
+        setSolvedCount(count)
+        if (count >= SESSION_LIMIT) {
+          window.location.href = '/done'
+          return
+        }
+      } catch (e) {}
       setTimeout(() => { setCurrent(c => Math.min(total - 1, c + 1)) }, 150)
       alert('Saved — moving to next')
     } else {
@@ -145,8 +174,9 @@ export default function AiPage() {
 
   return (
     <div style={{fontFamily:'-apple-system, Roboto, Arial', maxWidth:900, margin:'40px auto', padding:20}}>
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-        <div>{current+1} / {total}</div>
+<div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div>Question {current+1}</div>
+        <div>Progress: {solvedCount} / {SESSION_LIMIT}</div>
       </div>
 
       <div style={{marginTop:8}}>
