@@ -1,4 +1,10 @@
+import { useEffect } from 'react'
+
 export default function Done() {
+  useEffect(() => {
+    localStorage.clear()
+  },[])
+
   return (
     <div style={{fontFamily:'-apple-system, Roboto, Arial', maxWidth:700, margin:'80px auto', textAlign:'center'}}>
       <h1>Good job!</h1>
